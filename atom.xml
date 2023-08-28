@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://blog.fintechme.top</id>
+    <title>Fintechme</title>
+    <updated>2023-08-28T09:42:20.003Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://blog.fintechme.top"/>
+    <link rel="self" href="https://blog.fintechme.top/atom.xml"/>
+    <subtitle>Empowering minds, shaping futures</subtitle>
+    <logo>https://blog.fintechme.top/images/avatar.png</logo>
+    <icon>https://blog.fintechme.top/favicon.ico</icon>
+    <rights>All rights reserved 2023, Fintechme</rights>
+    <entry>
+        <title type="html"><![CDATA[tesserocr二值化识别知网登录验证码]]></title>
+        <id>https://blog.fintechme.top/post/tesserocr-er-zhi-hua-shi-bie-zhi-wang-deng-lu-yan-zheng-ma/</id>
+        <link href="https://blog.fintechme.top/post/tesserocr-er-zhi-hua-shi-bie-zhi-wang-deng-lu-yan-zheng-ma/">
+        </link>
+        <updated>2023-08-16T05:27:13.000Z</updated>
+        <content type="html"><![CDATA[<ul>
+<li>随机获取了知网登录界面的三个图片验证码，测试 tesserocr 识别验证码的准确度</li>
+</ul>
+<figure data-type="image" tabindex="1"><img src="https://img-blog.csdnimg.cn/2a049d9d470145d6b448ed16ddfad1b9.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAamFja2dhb2hhaGFoYQ==,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述" loading="lazy"></figure>
+<ul>
+<li>编写代码，先测试pic1</li>
+</ul>
+<pre><code>import tesserocr    # 导入tesserocr模块
+from PIL import Image  # 导入图像处理模块
+
+img = Image.open('pic1.png')
+code_result = tesserocr.image_to_text(img)
+print('识别结果：', code_result)
+
+</code></pre>
+<ul>
+<li>pic1识别结果：PEHK.<br>
+<img src="https://img-blog.csdnimg.cn/e91b2f51114649328fba41d5e0948fb6.png" alt="在这里插入图片描述" loading="lazy"></li>
+<li>由于验证码图片中带有很多干扰线条，导致识别结果不准确（后面多一个点).</li>
+<li>接下来，进行图片灰度测试看看能不能解决问题</li>
+</ul>
+<pre><code>import tesserocr    # 导入tesserocr模块
+from PIL import Image  # 导入图像处理模块
+
+img = Image.open('pic1.png')
+lim = img.convert('L')    # 图片灰度化
+img.show()   # 打印图片
+code_result = tesserocr.image_to_text(lim)
+print('识别结果：', code_result)
+</code></pre>
+<ul>
+<li>测试结果：PEHK.  还是有个点<br>
+<img src="https://img-blog.csdnimg.cn/a8ca81f055b94d9c8ae0b9550769202b.png#pic_center" alt="在这里插入图片描述" loading="lazy"></li>
+<li>继续进行图片二值化</li>
+</ul>
+<pre><code>import tesserocr    # 导入tesserocr模块
+from PIL import Image  # 导入图像处理模块
+img = Image.open('pic1.png')
+width = img.size[0]
+lim = img.convert('L')    # 图片灰度化
+# img.show()   # 打印图片
+
+threshold = 155    # 设置阈值
+data = []   # 定义一个空列表，接收二值化数据
+for i in range(0, 256):
+    if i &lt; threshold:
+        data.append(0)
+    else:
+        data.append(1)
+
+bim = lim.point(data,'1') # 图片二值化
+bim.show()  # 打印二值化后的图片
+code_result = tesserocr.image_to_text(bim)
+print('识别结果：', code_result)
+
+</code></pre>
+<ul>
+<li>二值化结果：成功识别到验证码 【PEHK】</li>
+</ul>
+<figure data-type="image" tabindex="2"><img src="https://img-blog.csdnimg.cn/0e411618d5434def80abc1596ce357bd.png#pic_center" alt="在这里插入图片描述" loading="lazy"></figure>
+<ul>
+<li>经过测试，pic2 以及 pic3 在二值化后都可以识别出来，如果二值化后还无法精确识别，则需要调整二值化阈值（threshold = 155）。关于图像二值化，<a href="https://www.cnblogs.com/ssyfj/p/9272615.html#%C2%A0%E5%85%AD%EF%BC%9A%E8%87%AA%E5%B7%B1%E8%AE%A1%E7%AE%97%E9%98%88%E5%80%BC">参考</a></li>
+</ul>
+<p>-遇到的【问题1】：tessdata路径报错<br>
+<img src="https://img-blog.csdnimg.cn/9e409f6bca194773b38d87dcaf525811.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAamFja2dhb2hhaGFoYQ==,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述" loading="lazy"></p>
+<ul>
+<li>解决: tessdata的路径出错，找到tesseract安装路径，把tessdata文件夹复制一份到anaconda路径下面，例如：C:\ProgramData\Anaconda3\tessdata</li>
+</ul>
+<p>-遇到的【问题2】：安装tesserocr模块失败</p>
+<ul>
+<li>解决：参考我的另一篇博客（https://editor.csdn.net/md/?articleId=123265184）</li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[使用打码平台登录B站]]></title>
+        <id>https://blog.fintechme.top/post/shi-yong-da-ma-ping-tai-deng-lu-b-zhan/</id>
+        <link href="https://blog.fintechme.top/post/shi-yong-da-ma-ping-tai-deng-lu-b-zhan/">
+        </link>
+        <updated>2023-08-16T05:08:31.000Z</updated>
+        <content type="html"><![CDATA[<p>B站登录需要用到图片点坐标点选类型的验证码验证，使用传统的OCR技术解决起来比较棘手，因此借助于第三方打码平台，可以快速实现这一功能。</p>
+<ul>
+<li>创建项目【使用打码平台登录B站】，新建python文件【bili.py】【img_api.py】【accounts.py】<br>
+<img src="https://img-blog.csdnimg.cn/120d8afb48eb4c24b28b88487866fae0.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAamFja2dhb2hhaGFoYQ==,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述" loading="lazy"></li>
+<li>进入【accounts.py】，定义你的打码平台和B站账号以及密码</li>
+</ul>
+<pre><code>&quot;&quot;&quot;快识别账号密码&quot;&quot;&quot;
+KUAI_USER = '你的账号'
+KUAI_PASS = '你的密码'
+
+&quot;&quot;&quot;B站账号密码&quot;&quot;&quot;
+BILI_USER = '你的账号'
+BILI_PASS = '你的密码'
+
+</code></pre>
+<ul>
+<li>进入【img_api.py】文件，进入打码平台开发文档的python接口（上面有提示，不打广告），把开发文档复制到【img_api.py】</li>
+</ul>
+<pre><code>import base64
+import json
+import requests
+# 一、图片文字类型(默认 3 数英混合)：
+# 1 : 纯数字
+# 1001：纯数字2
+# 2 : 纯英文
+# 1002：纯英文2
+# 3 : 数英混合
+# 1003：数英混合2
+#  4 : 闪动GIF
+# 7 : 无感学习(独家)
+# 11 : 计算题
+# 1005:  快速计算题
+# 16 : 汉字
+# 32 : 通用文字识别(证件、单据)
+# 66:  问答题
+# 49 :recaptcha图片识别
+# 二、图片旋转角度类型：
+# 29 :  旋转类型
+#
+# 三、图片坐标点选类型：
+# 19 :  1个坐标
+# 20 :  3个坐标
+# 21 :  3 ~ 5个坐标
+# 22 :  5 ~ 8个坐标
+# 27 :  1 ~ 4个坐标
+# 48 : 轨迹类型
+#
+# 四、缺口识别
+# 18 : 缺口识别（需要2张图 一张目标图一张缺口图）
+# 33 : 单缺口识别（返回X轴坐标 只需要1张图）
+# 五、拼图识别
+# 53：拼图识别
+def base64_api(uname, pwd, img, typeid):
+    with open(img, 'rb') as f:
+        base64_data = base64.b64encode(f.read())
+        b64 = base64_data.decode()
+    data = {&quot;username&quot;: uname, &quot;password&quot;: pwd, &quot;typeid&quot;: typeid, &quot;image&quot;: b64}
+    result = json.loads(requests.post(&quot;http://api.ttshitu.com/predict&quot;, json=data).text)
+    if result['success']:
+        return result[&quot;data&quot;][&quot;result&quot;]
+    else:
+        return result[&quot;message&quot;]
+    return &quot;&quot;
+
+
+if __name__ == &quot;__main__&quot;:
+    img_path = &quot;C:/Users/Administrator/Desktop/file.jpg&quot;
+    result = base64_api(uname='你的账号', pwd='你的密码', img=img_path, typeid=3)
+    print(result)
+</code></pre>
+<ul>
+<li>重写【img_api.py】文件</li>
+</ul>
+<pre><code>import base64
+from accounts import KUAI_USER, KUAI_PASS    		# accounts.py中导入你定义的打码平台账号和密码变量
+import requests
+
+
+def base64_api(img):
+    # 定义一个函数, 把用户名,密码 和图片路径传进去
+
+    with open(img, 'rb') as f:            # 打开请求到的验证码图片
+        base64_data = base64.b64encode(f.read()).decode()       # 读取验证码图片并且转换成字符串类型
+    data = {&quot;username&quot;: KUAI_USER , &quot;password&quot;: KUAI_PASS, &quot;typeid&quot;: 21, &quot;image&quot;: base64_data}   # 用户名和密码导入，typeid是根据开发文档查到的对应接口数字（B站验证码为图片坐标点选类型), image是图片字符串数据
+    result = requests.post(&quot;http://api.ttshitu.com/predict&quot;, data=data).json()   # 携带data参数，发送post请求，返回json数据
+    if result['success']:
+        return result[&quot;data&quot;][&quot;result&quot;]
+    else:
+        return result[&quot;message&quot;]
+
+
+if __name__ == &quot;__main__&quot;:
+    img_path = &quot;yzm.png&quot;    # 相对路径，由【bili.py】保存在项目文件下
+    result = base64_api(img=img_path)   # 把img_path传递进去，调用base64_api函数
+    print(result)
+</code></pre>
+<ul>
+<li>进入谷歌浏览器，搜索栏输入：chrome://version 查看浏览器版本</li>
+</ul>
+<figure data-type="image" tabindex="1"><img src="https://img-blog.csdnimg.cn/d6c388d7123841d5a46d6b3d904f999d.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAamFja2dhb2hhaGFoYQ==,size_20,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述" loading="lazy"></figure>
+<ul>
+<li>进入（https://registry.npmmirror.com/binary.html?path=chromedriver/）查找谷歌浏览器对应的版本号，下载下来并解压，放到项目路径下面</li>
+</ul>
+<figure data-type="image" tabindex="2"><img src="https://img-blog.csdnimg.cn/464ed9130b6546dfbf011a6d23fb6fe3.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAamFja2dhb2hhaGFoYQ==,size_12,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述" loading="lazy"></figure>
+<ul>
+<li>进入【bili.py】，编写主程序</li>
+</ul>
+<pre><code>import time
+from selenium.webdriver.common.by import By
+from accounts import BILI_USER, BILI_PASS
+from selenium import webdriver
+from selenium.webdriver import ActionChains
+from img_api import base64_api
+
+driver = webdriver.Chrome()         # 实例化浏览器驱动
+driver.get('https://passport.bilibili.com/login')  # 发送请求
+driver.implicitly_wait(10) # 隐式等待10秒
+driver.maximize_window() # 最大化浏览器窗口
+
+&quot;&quot;&quot;找用户名和密码框, 输入数据&quot;&quot;&quot;
+username_input = driver.find_element(By.CSS_SELECTOR, '#login-username')   # 使用css语法定位用户名输入框
+username_input.click()   # 点击账号输入框
+time.sleep(0.5)    # 强制等待0.5秒
+username_input.send_keys(BILI_USER) # 传入账号
+time.sleep(0.5) # 强制等待0.5秒
+
+
+password_input = driver.find_element(By.CSS_SELECTOR, '#login-passwd')  # 使用css语法定位密码输入框
+password_input.click() # 点击密码输入框
+time.sleep(0.5)
+password_input.send_keys(BILI_PASS)  # 传入密码
+time.sleep(0.5)
+
+&quot;&quot;&quot;点击登录按钮&quot;&quot;&quot;
+time.sleep(0.5)
+driver.find_element(By.CSS_SELECTOR, '.btn.btn-login').click()  # 使用css语法定位登录按钮并点击
+time.sleep(2)
+
+# 找验证码对应的标签
+img_label = driver.find_element(By.CSS_SELECTOR, '.geetest_holder.geetest_silver') # 点击登录后跳转到验证码验证界面，使用css语法定位到验证码标签对象
+
+
+&quot;&quot;&quot;直接根据标签元素保存图片&quot;&quot;&quot;
+time.sleep(4)  # 保存验证码前一定要加强制等待
+img_label.screenshot('yzm.png') # 截取验证码图片
+time.sleep(4)
+print('正在保存验证码...')
+
+
+&quot;&quot;&quot;识别图验证码&quot;&quot;&quot;
+code_result_list = base64_api('yzm.png')   # 调用【img_api.py】，返回的数据是X,Y 坐标值
+print('验证码识别结果为:', code_result_list)  # 113,79|197,147
+
+result_list = code_result_list.split('|')  # ['113,79', '197,147']，转换成列表
+
+for result in result_list:
+    x = result.split(',')[0]  # 根据列表索引取出 X 坐标值，是str类型
+    y = result.split(',')[1]  # 根据列表索引取出 Y 坐标值，是str类型
+
+    # ActionChains 鼠标动作链对象
+    # move_to_element_with_offset  根据元素执行点击操作
+    # perform()  执行动作链
+    ActionChains(driver).move_to_element_with_offset(img_label, int(x), int(y)).click().perform()
+
+time.sleep(5)
+&quot;&quot;&quot;点击确认&quot;&quot;&quot;
+driver.find_element(By.CSS_SELECTOR, '.geetest_commit_tip').click()
+
+input()
+driver.quit()
+</code></pre>
+<ul>
+<li>运行【bili.py】<br>
+<img src="https://img-blog.csdnimg.cn/4521da5738c6470d934f515400d0d190.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBAamFja2dhb2hhaGFoYQ==,size_19,color_FFFFFF,t_70,g_se,x_16#pic_center" alt="在这里插入图片描述" loading="lazy"></li>
+<li>跳转到短信验证码登录页面，证明打码成功</li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[搭建个人博客网站]]></title>
+        <id>https://blog.fintechme.top/post/da-jian-ge-ren-bo-ke-wang-zhan/</id>
+        <link href="https://blog.fintechme.top/post/da-jian-ge-ren-bo-ke-wang-zhan/">
+        </link>
+        <updated>2023-08-16T04:18:44.000Z</updated>
+        <content type="html"><![CDATA[<h3 id="准备工作">准备工作</h3>
+<ol>
+<li>
+<p>购买服务器：注册成功后，点击部署，配置自选</p>
+</li>
+<li>
+<p>购买域名：域名备案等操作</p>
+</li>
+<li>
+<p>域名映射</p>
+</li>
+</ol>
+<h3 id="软件配置latest-version">软件配置（latest version）：</h3>
+<ol>
+<li>Nginx</li>
+<li>MySQL</li>
+<li>MariaDB</li>
+<li>PHP</li>
+<li>wordpress</li>
+<li>Center-os8</li>
+</ol>
+<h3 id="配置步骤">配置步骤</h3>
+<h4 id="连接服务器">连接服务器</h4>
+<ol>
+<li>
+<p>mac可以通过终端，或者使用可视化软件 <a href="https://www.royalapps.com/ts/mac/download">Royal RSX</a></p>
+</li>
+<li>
+<p>windows可以通过<a href="https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html">putty</a>进行远程连接服务器</p>
+</li>
+</ol>
+<h4 id="关闭防火墙及selinux">关闭防火墙及SELinux</h4>
+<pre><code>systemctl disable firewalld
+</code></pre>
+<pre><code>nano /etc/selinux/config
+
+修改配置文件：
+SELINUX=disabled
+</code></pre>
+<h4 id="配置nginx">配置nginx</h4>
+<ol>
+<li>安装</li>
+</ol>
+<pre><code>dnf install nginx -y
+</code></pre>
+<ol start="2">
+<li>启动nginx服务，并设置开机自启动</li>
+</ol>
+<pre><code>systemctl start nginx
+systemctl enable nginx
+</code></pre>
+<h4 id="安装mariadb数据库">安装MariaDB数据库</h4>
+<ol>
+<li>安装</li>
+</ol>
+<pre><code>dnf install mariadb-server -y
+</code></pre>
+<ol start="2">
+<li>启动MariaDB服务，并设置开机自启动</li>
+</ol>
+<pre><code>systemctl start mariadb
+systemctl enable mariadb
+</code></pre>
+<ol start="3">
+<li>设置密码</li>
+</ol>
+<pre><code>mysql_secure_installation
+
+设置过程中提问：
+Enter current password for root (enter for none): #服务器中的密码
+Set root password? [Y/n] Y
+New password:
+Re-enter new password:
+Remove anonymous users? [Y/n] Y
+Disallow root login remotely? [Y/n] Y
+Remove test database and access to it? [Y/n] Y
+Reload privilege tables now? [Y/n] Y
+</code></pre>
+<h4 id="安装php">安装PHP</h4>
+<ol>
+<li>安装</li>
+</ol>
+<pre><code>dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+dnf install https://rpms.remirepo.net/enterprise/remi-release-8.rpm
+</code></pre>
+<ol start="2">
+<li>安装依赖及拓展</li>
+</ol>
+<pre><code>dnf module reset php
+dnf module install php:remi-8.0 -y
+dnf install php php-mysqlnd php-fpm php-opcache php-curl php-json php-gd php-xml php-mbstring php-zip -y
+</code></pre>
+<h4 id="修改php配置文件">修改PHP配置文件</h4>
+<ol>
+<li>进入php配置文件</li>
+</ol>
+<pre><code>nano /etc/php-fpm.d/www.conf
+</code></pre>
+<ol start="2">
+<li>修改内容</li>
+</ol>
+<pre><code>user = nginx
+group = nginx
+</code></pre>
+<ol start="3">
+<li>保存并重启php-fpm</li>
+</ol>
+<pre><code>systemctl start php-fpm
+systemctl enable php-fpm
+</code></pre>
+<h4 id="创建wordpress数据库">创建wordpress数据库</h4>
+<pre><code>mysql -u root -p
+
+CREATE DATABASE wordpressdb;
+CREATE USER `wordpressuser`@`localhost` IDENTIFIED BY 'securepassword';
+
+GRANT ALL ON wordpressdb.* TO `wordpressuser`@`localhost`;
+
+FLUSH PRIVILEGES;
+EXIT;
+</code></pre>
+<h4 id="下载安装wordpress">下载安装wordpress</h4>
+<blockquote>
+<p>yourdomain.com为映射好的个人域名，不能输错</p>
+</blockquote>
+<pre><code>cd /var/www/html
+wget https://wordpress.org/latest.tar.gz
+
+tar -xvzf latest.tar.gz
+
+mv wordpress yourdomain.com
+
+chown -R nginx:nginx /var/www/html/yourdomain.com
+</code></pre>
+<h4 id="为-wordpress-创建-nginx-虚拟主机">为 WordPress 创建 Nginx 虚拟主机</h4>
+<ol>
+<li>进入nginx配置文件</li>
+</ol>
+<pre><code>nano /etc/nginx/conf.d/yourdomain.conf
+</code></pre>
+<ol start="2">
+<li>添加内容</li>
+</ol>
+<pre><code>server {
+   listen 80;
+   server_name yourdomain.com www.yourdomain.com;
+
+   root /var/www/html/yourdomain.com;
+   index index.php index.html index.htm;
+
+   location / {
+      try_files $uri $uri/ =404;
+   }
+   error_page 404 /404.html;
+   error_page 500 502 503 504 /50x.html;
+   location = /50x.html {
+      root /usr/share/nginx/html;
+   }
+
+   location ~ \.php$ {
+      try_files $uri =404;
+      fastcgi_pass unix:/var/run/php-fpm/www.sock;
+      fastcgi_index index.php;
+      fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+      include fastcgi_params;
+   }
+}
+</code></pre>
+<ol start="3">
+<li>重启ngnix服务</li>
+</ol>
+<pre><code>systemctl restart nginx
+</code></pre>
+<h4 id="访问wordpress网站httpsyourdomaincom根据提示填入注册信息">访问wordpress网站：<strong>https://yourdomain.com</strong>，根据提示填入注册信息</h4>
+<h4 id="配置网站样式-发布内容等系列操作">配置网站样式、发布内容等系列操作</h4>
+<h3 id="参考">参考：</h3>
+<p><a href="https://blog.csdn.net/zhiboqingyun/article/details/120834862">Centos8安装wordpress</a></p>
+<p><a href="https://cloudinfrastructureservices.co.uk/install-wordpress-on-centos-8/">How to Install WordPress on CentOS 8 (Step by Step) Tutorial</a></p>
+<p><a href="https://blog.csdn.net/m0_37322492/article/details/104795577">mac终端操作mysql数据库常用命令</a></p>
+]]></content>
+    </entry>
+</feed>
